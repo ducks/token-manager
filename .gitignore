@@ -1,0 +1,7 @@
+/target/
+/dist/
+/.direnv/
+.env
+.env.*
+*.key
+__pycache__/
