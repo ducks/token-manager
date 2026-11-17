@@ -1,0 +1,14 @@
+id = "vercel"
+name = "Vercel AI Gateway"
+base_url = "https://ai-gateway.vercel.sh"
+path = "/v1/credits"
+key_url = "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway"
+billing_url = "https://vercel.com/dashboard"
+credential_help = "Use an AI Gateway key for the team whose credits you want to view."
+source = "https://github.com/vercel/vercel-plugin/blob/main/skills/ai-gateway/references/spend-observability.md"
+
+[balance]
+rows = ""
+currency = "USD"
+remaining = "/balance"
+used = "/total_used"

@@ -1,0 +1,21 @@
+[package]
+name = "token-manager"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Read-only AI account balances and quotas in your terminal"
+license = "MIT"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["arbitrary_precision"] }
+toml = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+rpassword = "7"
+rust_decimal = { version = "1", default-features = false, features = ["std"] }
+sha2 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"

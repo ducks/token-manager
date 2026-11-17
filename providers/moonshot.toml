@@ -1,0 +1,20 @@
+id = "moonshot"
+name = "Kimi / Moonshot International"
+base_url = "https://api.moonshot.ai"
+path = "/v1/users/me/balance"
+key_url = "https://platform.kimi.ai/console/api-keys"
+billing_url = "https://platform.kimi.ai/console/account"
+credential_help = "Use an international Kimi API Platform key. This is USD API credit, not a Kimi Code subscription or a China account."
+source = "https://platform.kimi.ai/docs/api/balance"
+
+[[response_checks]]
+path = "/code"
+equals = 0
+[[response_checks]]
+path = "/status"
+equals = true
+
+[balance]
+rows = "/data"
+currency = "USD"
+remaining = "/available_balance"

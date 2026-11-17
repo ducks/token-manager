@@ -1,0 +1,22 @@
+id = "opencode-go"
+name = "OpenCode Go"
+base_url = "https://opencode.ai"
+path = "/zen/go/v1/usage"
+key_url = "https://opencode.ai/auth"
+billing_url = "https://opencode.ai/auth"
+credential_help = "Use your workspace's Go API key. This reports subscription windows, not the Zen credit wallet."
+source = "https://github.com/anomalyco/opencode/issues/44189"
+experimental = true
+
+[[quotas]]
+label = "Rolling"
+percent = "/usage/rolling/percent"
+reset_at = "/usage/rolling/resetsAt"
+[[quotas]]
+label = "Weekly"
+percent = "/usage/weekly/percent"
+reset_at = "/usage/weekly/resetsAt"
+[[quotas]]
+label = "Monthly"
+percent = "/usage/monthly/percent"
+reset_at = "/usage/monthly/resetsAt"
