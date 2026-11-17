@@ -1,0 +1,14 @@
+id = "openrouter"
+name = "OpenRouter"
+base_url = "https://openrouter.ai"
+path = "/api/v1/credits"
+key_url = "https://openrouter.ai/settings/keys"
+billing_url = "https://openrouter.ai/settings/credits"
+credential_help = "Account-wide credits require a management key; a normal inference key may receive HTTP 403."
+source = "https://openrouter.ai/docs/api/api-reference/credits/get-remaining-credits"
+
+[balance]
+rows = "/data"
+currency = "USD"
+total = "/total_credits"
+used = "/total_usage"

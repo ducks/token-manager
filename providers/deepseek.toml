@@ -1,0 +1,13 @@
+id = "deepseek"
+name = "DeepSeek"
+base_url = "https://api.deepseek.com"
+path = "/user/balance"
+key_url = "https://platform.deepseek.com/api_keys"
+billing_url = "https://platform.deepseek.com/"
+credential_help = "Use a DeepSeek API key."
+source = "https://api-docs.deepseek.com/api/get-user-balance/"
+
+[balance]
+rows = "/balance_infos"
+currency_path = "/currency"
+remaining = "/total_balance"

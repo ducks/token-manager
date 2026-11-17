@@ -1,0 +1,16 @@
+id = "synthetic"
+name = "Synthetic Subscription"
+base_url = "https://api.synthetic.new"
+path = "/v2/quotas"
+key_url = "https://dev.synthetic.new/docs/api/getting-started"
+billing_url = "https://synthetic.new/billing"
+credential_help = "Use your Synthetic API key. Shows the subscription request counters exposed by /v2/quotas, not a prepaid credit wallet. The API is under development."
+source = "https://dev.synthetic.new/docs/synthetic/quotas"
+experimental = true
+
+[[quotas]]
+label = "Subscription"
+used = "/subscription/requests"
+limit = "/subscription/limit"
+unit = "requests"
+reset_at = "/subscription/renewsAt"

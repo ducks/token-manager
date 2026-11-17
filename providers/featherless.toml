@@ -1,0 +1,13 @@
+id = "featherless"
+name = "Featherless Developer Credits"
+base_url = "https://api.featherless.ai"
+path = "/credits/balance"
+key_url = "https://featherless.ai/account/api-keys"
+billing_url = "https://featherless.ai/account"
+credential_help = "Use an organization Admin API key with manage_billing permission. Shows available USD after in-flight reservations, not the Chat subscription allowance."
+source = "https://featherless.ai/docs/api-reference-credits"
+
+[balance]
+rows = ""
+currency = "USD"
+remaining = "/available_usd"

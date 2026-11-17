@@ -1,0 +1,8 @@
+id = "opencode-zen"
+name = "OpenCode Zen"
+base_url = "https://opencode.ai"
+key_url = "https://opencode.ai/auth"
+billing_url = "https://opencode.ai/auth"
+credential_help = "Zen is a separate prepaid wallet, not a Go subscription."
+source = "https://github.com/anomalyco/opencode/issues/44189"
+unsupported_reason = "No verified public Zen wallet-balance endpoint. Open billing to view credits; Go quota is a different product."
