@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add separate NanoGPT wallet/subscription and Chutes account-balance adapters.
+- Support empty read-only account POST requests, explicit epoch reset formats
+  and degraded usage guards without changing existing default adapter bindings.
+
 - Add Kimi/Moonshot international and China balances, Featherless spendable
   credits and experimental Synthetic subscription limits.
 - Embed built-in provider definitions automatically without a Rust registry edit.

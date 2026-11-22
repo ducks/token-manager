@@ -102,3 +102,19 @@ provider IDs. The new demo also exercises Synthetic's actual local HTTP request
 and asserts its absolute 27/135 request count and derived 20% usage. No remote CI,
 commits, releases or publications were performed; the earlier dist archive preview
 was preserved rather than overwritten with different bytes.
+
+
+## NanoGPT and Chutes adapter validation
+
+Added three declarative adapters: NanoGPT USD wallet (empty account POST),
+NanoGPT subscription counters (GET), and Chutes account balance (GET). The engine
+supports declarative request methods, epoch reset conversion and boolean degraded
+usage flags. Default GET/text fields and absent optional fields remain omitted
+from serialization to preserve existing provider fingerprints.
+
+Under the pinned `nix-shell`, `make check build` passed formatting, Clippy,
+26 isolated tests and the locked release build. The new eight-test fixture batch
+covers account separation, exact balances, quota units, timestamps, degraded
+counters, null balances, private-profile exclusion, and the empty POST/auth-header
+contract. No new real-account authentication is claimed. Public NanoGPT OpenAPI
+and Chutes router source were reviewed on November 22, 2026.

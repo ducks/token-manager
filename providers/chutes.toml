@@ -1,0 +1,13 @@
+id = "chutes"
+name = "Chutes Account Balance"
+base_url = "https://api.chutes.ai"
+path = "/users/me"
+key_url = "https://chutes.ai/app/api"
+billing_url = "https://chutes.ai/app/api/billing-balance"
+credential_help = "Use an account-read bearer credential for your own Chutes account. Invocation-only keys may lack access. A null/redacted balance is unavailable, never zero. This is account credit, not subscription request quota."
+source = "https://github.com/chutesai/chutes-api/blob/main/api/user/router.py"
+
+[balance]
+rows = ""
+currency = "USD"
+remaining = "/balance"

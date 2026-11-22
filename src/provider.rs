@@ -16,6 +16,8 @@ pub struct Provider {
     pub base_url: String,
     #[serde(default)]
     pub path: String,
+    #[serde(default, skip_serializing_if = "RequestMethod::is_get")]
+    pub method: RequestMethod,
     pub unsupported_reason: Option<String>,
     #[serde(default)]
     pub auth: Auth,
@@ -31,6 +33,40 @@ pub struct Provider {
     #[serde(default)]
     pub quotas: Vec<QuotaMap>,
 }
+#[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum RequestMethod {
+    #[default]
+    Get,
+    Post,
+}
+impl RequestMethod {
+    pub fn is_get(&self) -> bool {
+        *self == Self::Get
+    }
+}
+impl From<RequestMethod> for reqwest::Method {
+    fn from(method: RequestMethod) -> Self {
+        match method {
+            RequestMethod::Get => Self::GET,
+            RequestMethod::Post => Self::POST,
+        }
+    }
+}
+#[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ResetFormat {
+    #[default]
+    Text,
+    UnixSeconds,
+    UnixMilliseconds,
+}
+impl ResetFormat {
+    pub fn is_text(&self) -> bool {
+        *self == Self::Text
+    }
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Auth {
@@ -75,6 +111,10 @@ pub struct QuotaMap {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
     pub reset_at: Option<String>,
+    #[serde(default, skip_serializing_if = "ResetFormat::is_text")]
+    pub reset_format: ResetFormat,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unavailable_when: Option<String>,
 }
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct Balance {
@@ -174,7 +214,10 @@ impl Provider {
             self.endpoint(allow_local_http)?;
         } else {
             ensure!(
-                self.path.is_empty() && self.balance.is_none() && self.quotas.is_empty(),
+                self.path.is_empty()
+                    && self.balance.is_none()
+                    && self.quotas.is_empty()
+                    && self.method.is_get(),
                 "unsupported providers must not declare request mappings"
             );
         }
@@ -243,9 +286,15 @@ impl Provider {
                 quota.used.is_none() || quota.unit.is_some(),
                 "absolute quotas require an explicit unit"
             );
-            for path in [&quota.percent, &quota.used, &quota.limit, &quota.reset_at]
-                .into_iter()
-                .flatten()
+            for path in [
+                &quota.percent,
+                &quota.used,
+                &quota.limit,
+                &quota.reset_at,
+                &quota.unavailable_when,
+            ]
+            .into_iter()
+            .flatten()
             {
                 ensure!(pointer(path), "invalid quota JSON pointer");
             }
@@ -318,9 +367,24 @@ impl Provider {
                     _ => Ok(None),
                 }
             };
-            let used = optional_number(&quota.used)?;
+            let unavailable = match quota
+                .unavailable_when
+                .as_ref()
+                .and_then(|path| value.pointer(path))
+            {
+                None | Some(Value::Null) => false,
+                Some(Value::Bool(value)) => *value,
+                _ => bail!("quota unavailable flag must be boolean"),
+            };
+            let used = if unavailable {
+                None
+            } else {
+                optional_number(&quota.used)?
+            };
             let limit = optional_number(&quota.limit)?;
-            let percent = if quota.percent.is_some() {
+            let percent = if unavailable {
+                None
+            } else if quota.percent.is_some() {
                 optional_number(&quota.percent)?
             } else if let (Some(used), Some(limit)) = (used, limit) {
                 if limit.is_zero() {
@@ -336,12 +400,36 @@ impl Provider {
                 None
             };
             let used_percent = percent.map(|p| p.normalize().to_string());
-            let reset_at = quota
-                .reset_at
-                .as_ref()
-                .and_then(|p| value.pointer(p))
-                .and_then(Value::as_str)
-                .map(str::to_owned);
+            let raw_reset = quota.reset_at.as_ref().and_then(|path| value.pointer(path));
+            let reset_at = if unavailable {
+                None
+            } else {
+                match raw_reset {
+                    None | Some(Value::Null) => None,
+                    Some(value) => Some(match quota.reset_format {
+                        ResetFormat::Text => value
+                            .as_str()
+                            .ok_or_else(|| anyhow::anyhow!("reset must be text"))?
+                            .to_owned(),
+                        format => {
+                            let timestamp = value
+                                .as_i64()
+                                .or_else(|| value.as_str().and_then(|v| v.parse().ok()))
+                                .ok_or_else(|| {
+                                    anyhow::anyhow!("reset must be integer epoch time")
+                                })?;
+                            ensure!(timestamp >= 0, "reset epoch time must be nonnegative");
+                            let date = if format == ResetFormat::UnixMilliseconds {
+                                chrono::DateTime::from_timestamp_millis(timestamp)
+                            } else {
+                                chrono::DateTime::from_timestamp(timestamp, 0)
+                            }
+                            .ok_or_else(|| anyhow::anyhow!("reset epoch time out of range"))?;
+                            date.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+                        }
+                    }),
+                }
+            };
             ensure!(
                 reset_at
                     .as_ref()

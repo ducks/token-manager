@@ -78,11 +78,17 @@ Every declared scalar equality must match. Missing/mismatched guards fail mappin
 these checks cannot run scripts or arbitrary expressions.
 
 Missing windows show unknown. At least one mapped balance or quota must exist
-in a successful response. Reset timestamps are currently displayed as returned,
-not parsed into countdowns. Unit scaling and arbitrary arithmetic are not supported beyond the declared
+in a successful response. Reset timestamps default to text displayed as returned. Set `reset_format` to
+`unix_seconds` or `unix_milliseconds` to normalize integer epoch values into UTC
+RFC 3339 timestamps. Countdown rendering is not implemented. Set
+`unavailable_when` to a boolean JSON pointer to suppress a degraded window’s
+used count, percentage and reset while retaining its declared limit. Unit scaling and arbitrary arithmetic are not supported beyond the declared
 balance subtraction and used/limit percentage calculation. Decimal strings and JSON numbers are accepted for amounts/percentages.
 
-Only GET requests are supported. HTTPS is required; redirects are refused.
+Requests default to GET. `method = "POST"` supports an empty request to a
+verified read-only account endpoint, such as NanoGPT wallet lookup. Definitions
+cannot send arbitrary request bodies; do not configure mutation or inference
+routes. Other methods are rejected. HTTPS is required; redirects are refused.
 `--allow-local-http` permits only literal 127.0.0.1 or ::1 fixture addresses,
 not arbitrary HTTP hosts. Request paths cannot switch the configured origin.
 Errors expose bounded categories, never raw provider response bodies.
@@ -134,7 +140,27 @@ All four new definitions have synthetic schema-fixture coverage; no credentials
 for these new services were used and no live success is claimed. Existing live
 verification for Vercel/Go remains distinct from fixture coverage.
 
-NanoGPT's published balance endpoint requires POST, while its subscription API
-has fractional percentages/epoch timestamps. SiliconFlow's balance routes have
-region/version changes. These need separate validation rather than guessed mappings;
-they are not padded into this catalog.
+SiliconFlow's balance routes have region/version changes and need separate
+validation rather than guessed mappings; they are not included in this catalog.
+
+## NanoGPT and Chutes
+
+- [NanoGPT OpenAPI](https://docs.nano-gpt.com/api-reference/openapi.json)
+  specifies an API base of `https://api.nano-gpt.com/api`. The wallet uses an
+  empty POST to `/check-balance`, an `x-api-key` header, and the authoritative
+  `usd_balance` decimal string. Nano-denominated holdings are not converted
+  into guessed USD credit.
+- NanoGPT subscription usage is a separate GET to `/subscription/v1/usage`
+  using an inference API key. Input-token and image counters retain their own
+  units. Percentages are derived from used/limit counters, not interpreted
+  directly from the API's fractional `percentUsed`. Reset times are epoch
+  milliseconds; degraded counters remain unavailable. The management-token
+  usage route is different and is not substituted automatically.
+- [Chutes user router](https://github.com/chutesai/chutes-api/blob/main/api/user/router.py)
+  supports GET `/users/me` using a credential with account-read access. Only
+  `balance` is normalized; profile fields and payment addresses are excluded.
+  Null/redacted balance is unavailable. These credits are not subscription
+  request quotas, and invocation-only keys may lack account-read permission.
+
+These three adapters have isolated schema and HTTP fixtures. Public documentation
+was checked on November 22, 2026; no real NanoGPT or Chutes account was queried.
