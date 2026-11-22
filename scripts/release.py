@@ -1,5 +1,8 @@
-"""Local Linux CLI packaging only. Never commit, tag, push or publish."""
+"""Release validation, local archives and explicitly invoked date-version publication."""
 import argparse
+from datetime import date, datetime
+import re
+import shlex
 import gzip
 import hashlib
 import io
@@ -34,7 +37,10 @@ def check(allow_dirty):
     state = subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True)
     require(not state or allow_dirty, "Working tree is dirty; --allow-dirty permits only a local preview")
     tag = subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/v{version}"], cwd=ROOT)
-    require(tag.returncode != 0, "Release tag already exists")
+    if tag.returncode == 0:
+        tagged = subprocess.check_output(["git", "rev-parse", f"v{version}^{{commit}}"], cwd=ROOT, text=True).strip()
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        require(tagged == head, "Release tag belongs to another source commit")
     print("PASS local release readiness" + (" (uncommitted preview)" if state else ""))
     return binary, version
 
@@ -72,16 +78,74 @@ def clean():
     require(not target.is_symlink(), "Refusing target symlink")
     require(not os.environ.get("CARGO_TARGET_DIR") or Path(os.environ["CARGO_TARGET_DIR"]).resolve() == target, "Refusing external Cargo target")
     if target.exists():
-        require(set(p.name for p in target.iterdir()) <= {"debug", "release", "tmp", ".rustc_info.json", "CACHEDIR.TAG"}, "Unknown files in target; inspect manually")
+        require(set(p.name for p in target.iterdir()) <= {"debug", "release", "tmp", "package", ".rustc_info.json", "CACHEDIR.TAG"}, "Unknown files in target; inspect manually")
         subprocess.run(["cargo", "clean", "--target-dir", str(target)], cwd=ROOT, check=True)
 
+def git(*args):
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+
+def next_version():
+    today = date.today().strftime("%Y%m%d")
+    patches = [int(match.group(1)) for tag in git("tag", "--list", f"v{today}.0.*").splitlines()
+               if (match := re.fullmatch(r"v" + today + r"\.0\.(\d+)", tag))]
+    return f"{today}.0.{max(patches, default=-1) + 1}"
+
+def publish(version, cargo, allow_dirty):
+    require(not allow_dirty, "--allow-dirty is only for previews, never release")
+    require(git("branch", "--show-current") == "main", "Release must start on main; merge reviewed changes first")
+    require(not git("status", "--porcelain"), "Working tree is dirty; commit changes before release")
+    git("remote", "get-url", "origin")
+    subprocess.run(["git", "fetch", "--tags", "origin"], cwd=ROOT, check=True)
+    require(git("rev-parse", "HEAD") == git("rev-parse", "origin/main"), "main and origin/main must match before release")
+    version = version or next_version()
+    require(re.fullmatch(r"\d{8}\.0\.\d+", version), "Version must use YYYYMMDD.0.PATCH")
+    datetime.strptime(version[:8], "%Y%m%d")
+    tag = "v" + version
+    require(not git("tag", "--list", tag), "Release tag already exists")
+    require(not git("ls-remote", "--tags", "origin", "refs/tags/" + tag), "Remote release tag already exists")
+    initial = git("rev-parse", "HEAD")
+    subprocess.run(["git", "switch", "-c", "release/" + tag], cwd=ROOT, check=True)
+    manifest_path = ROOT / "Cargo.toml"
+    manifest = manifest_path.read_text()
+    old = tomllib.loads(manifest)["package"]["version"]
+    manifest, changed = re.subn(r'(?ms)(^\[package\]\s*\n(?:(?!^\[).)*?^version\s*=\s*")[^"]+("[^\n]*)',
+                                 lambda m: m[1] + version + m[2], manifest, count=1)
+    require(changed == 1, "Cannot locate package version")
+    lock_path = ROOT / "Cargo.lock"
+    lock = lock_path.read_text()
+    lock, changed = re.subn(r'(?m)(^name\s*=\s*"token-manager"\s*\nversion\s*=\s*")[^"]+("$)',
+                             lambda m: m[1] + version + m[2], lock)
+    require(changed == 1, "Cannot locate root lockfile version")
+    changelog_path = ROOT / "CHANGELOG.md"
+    changelog = changelog_path.read_text()
+    require("## Unreleased\n" in changelog, "Missing Unreleased changelog section")
+    manifest_path.write_text(manifest)
+    lock_path.write_text(lock)
+    changelog_path.write_text(changelog.replace("## Unreleased\n", f"## Unreleased\n\n## {version}\n", 1))
+    subprocess.run(["git", "add", "Cargo.toml", "Cargo.lock", "CHANGELOG.md"], cwd=ROOT, check=True)
+    subprocess.run(["git", "commit", "-m", f"chore: release {version} (from {old})"], cwd=ROOT, check=True)
+    subprocess.run(["make", "release-check", "CARGO=" + cargo, "RELEASE_FLAGS="], cwd=ROOT, check=True)
+    require(not git("status", "--porcelain"), "Release checks changed source; inspect before continuing")
+    require(git("rev-parse", "main") == initial, "main changed during validation")
+    subprocess.run(["git", "switch", "main"], cwd=ROOT, check=True)
+    subprocess.run(["git", "merge", "--no-ff", "release/" + tag, "-m", "Merge release " + tag], cwd=ROOT, check=True)
+    subprocess.run(["git", "tag", "-a", tag, "-m", "Release " + version], cwd=ROOT, check=True)
+    subprocess.run(["git", "push", "--atomic", "origin", "main", "refs/tags/" + tag], cwd=ROOT, check=True)
+    require(not git("status", "--porcelain"), "Source changed before publication")
+    subprocess.run([*shlex.split(cargo), "publish", "--locked", "--registry", "crates-io"], cwd=ROOT, check=True)
+    print("Released " + version + ": main and annotated tag pushed; crates.io publication complete")
+
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("action", choices=["check", "prepare", "clean"])
+parser.add_argument("action", choices=["check", "prepare", "clean", "next-version", "release"])
 parser.add_argument("--allow-dirty", action="store_true")
+parser.add_argument("--version", default="")
+parser.add_argument("--cargo", default="cargo")
 args = parser.parse_args()
 try:
     if args.action == "check": check(args.allow_dirty)
     elif args.action == "prepare": prepare(args.allow_dirty)
+    elif args.action == "next-version": print(next_version())
+    elif args.action == "release": publish(args.version, args.cargo, args.allow_dirty)
     else: clean()
 except (ValueError, OSError, subprocess.SubprocessError) as error:
     raise SystemExit(str(error))

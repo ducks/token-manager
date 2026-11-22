@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add date-versioned releases with verified crates.io packaging, release commits,
+  annotated tags and atomic Git pushes. Keep local packaging as `release-archive`.
+
 - Add separate NanoGPT wallet/subscription and Chutes account-balance adapters.
 - Support empty read-only account POST requests, explicit epoch reset formats
   and degraded usage guards without changing existing default adapter bindings.
