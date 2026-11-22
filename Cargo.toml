@@ -5,6 +5,8 @@ edition = "2024"
 rust-version = "1.88"
 description = "Read-only AI account balances and quotas in your terminal"
 license = "MIT"
+repository = "https://github.com/ducks/token-manager"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1"

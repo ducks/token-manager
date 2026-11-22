@@ -127,7 +127,8 @@ Docker, a daemon, a database and an inference SDK are unnecessary for this spike
 
 CI calls the same Make targets through the pinned shell. Local validation is
 recorded in [the implementation report](docs/implementation.md); remote CI has
-not run. [Release preparation](docs/releases.md) is local and never publishes.
+not run. [Release instructions](docs/releases.md) distinguish safe dry-run validation,
+local archive preparation and explicit crates.io publication with `make release`.
 
 ## Remaining scope
 

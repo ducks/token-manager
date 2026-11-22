@@ -118,3 +118,19 @@ covers account separation, exact balances, quota units, timestamps, degraded
 counters, null balances, private-profile exclusion, and the empty POST/auth-header
 contract. No new real-account authentication is claimed. Public NanoGPT OpenAPI
 and Chutes router source were reviewed on November 22, 2026.
+
+
+## crates.io release workflow
+
+`make release` uses date versions (`YYYYMMDD.0.PATCH`) matching the other Rust
+projects. It prepares and commits a release branch, verifies the package through
+`make release-check`, merges with no-ff, creates an annotated version tag,
+atomically pushes main and the tag, then publishes to crates.io. Dirty source
+and preview flags are rejected. `release-check` never uploads; the old native
+binary archive preview is available as `release-archive`.
+
+The workflow tests use disposable local Git remotes and fake Cargo to check
+version/lock/changelog updates, annotated tags, pushes, publish ordering and
+failure propagation. Real Cargo package verification is performed separately
+through the non-uploading dry-run command. Publishing credentials are never
+stored in the repository.
