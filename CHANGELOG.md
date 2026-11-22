@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 20261122.0.0
+
 - Add date-versioned releases with verified crates.io packaging, release commits,
   annotated tags and atomic Git pushes. Keep local packaging as `release-archive`.
 
