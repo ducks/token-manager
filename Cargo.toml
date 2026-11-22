@@ -16,6 +16,7 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 rpassword = "7"
 rust_decimal = { version = "1", default-features = false, features = ["std"] }
 sha2 = "0.10"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
 
 [dev-dependencies]
 tempfile = "3"

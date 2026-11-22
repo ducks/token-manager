@@ -41,7 +41,7 @@ fn fetch(
         .endpoint(allow_local_http)
         .map_err(|_| ("configuration_error", "Invalid provider URL"))?;
     let response = client
-        .get(url)
+        .request(provider.method.into(), url)
         .header(
             &provider.auth.header,
             format!("{}{}", provider.auth.prefix, secret),

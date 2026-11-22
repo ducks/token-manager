@@ -1,0 +1,18 @@
+id = "nanogpt"
+name = "NanoGPT Wallet"
+base_url = "https://api.nano-gpt.com"
+path = "/api/check-balance"
+method = "POST"
+key_url = "https://nano-gpt.com/api"
+billing_url = "https://nano-gpt.com/usage"
+credential_help = "Use your NanoGPT API key. This POST only reads wallet balances; it sends no inference payload. Management tokens are a different credential and are not claimed to support wallet lookup."
+source = "https://docs.nano-gpt.com/api-reference/openapi.json"
+
+[auth]
+header = "x-api-key"
+prefix = ""
+
+[balance]
+rows = ""
+currency = "USD"
+remaining = "/usd_balance"

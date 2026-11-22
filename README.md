@@ -73,6 +73,9 @@ import of OpenCode/Claux auth stores or borrowing a Go key for Zen.
 | `moonshot-cn` | China Kimi API credits in CNY | Separate account/endpoint; fixtures verified |
 | `featherless` | Spendable Developer credits after reservations | Admin billing permission required; fixtures verified |
 | `synthetic` | Absolute subscription request usage/limit + percentage | Experimental API; fixtures verified |
+| `nanogpt` | USD wallet balance | Read-only POST; official schema; fixtures verified |
+| `nanogpt-subscription` | Daily/weekly input-token and daily image allowances | Separate subscription counters; fixtures verified |
+| `chutes` | Account credit balance | Upstream account-read mapping; fixtures verified |
 
 Go windows do not describe the Zen wallet. Missing data says “not available”;
 unsupported or failed checks never become a fabricated zero balance.
@@ -80,7 +83,7 @@ unsupported or failed checks never become a fabricated zero balance.
 
 ## Behavior and architecture
 
-`CLI → account references + provider definitions → bounded GET → normalization → table/JSON`
+`CLI → account references + provider definitions → bounded account request → normalization → table/JSON`
 
 Built-in adapters are embedded automatically from the sorted `providers/*.toml`
 directory during compilation. Adding a service requires a definition and fixtures,
@@ -130,7 +133,8 @@ not run. [Release preparation](docs/releases.md) is local and never publishes.
 
 No OAuth/device login or refresh, TUI/watch mode, account removal, credit-expiry
 lots, automatic purchase, provider scraping or quota forecasting. Custom mappings
-cover one GET, JSON pointers, scalar response checks and percent/used-limit
-quotas; pagination, signing, multi-step requests and
+cover one GET or empty read-only account POST, JSON pointers, scalar response
+checks, percent/used-limit quotas, explicit epoch reset formats and degraded-counter
+guards; pagination, signing, multi-step requests and
 nonstandard authentication require a later explicit capability. Built-in endpoint
 support is not a guarantee every key/plan has the required permission.
