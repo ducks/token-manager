@@ -1,0 +1,24 @@
+id = "claude"
+name = "Claude subscription"
+base_url = "https://api.anthropic.com"
+path = "/api/oauth/usage"
+key_url = "https://claude.ai/settings/usage"
+billing_url = "https://claude.ai/settings/usage"
+credential_help = "Provide an explicitly selected Claude OAuth access token with usage access, not an Anthropic API/Admin key. No automatic credential import, OAuth login or refresh. Internal usage endpoint may change or rate-limit requests."
+source = "https://github.com/steipete/CodexBar/blob/main/docs/claude.md"
+experimental = true
+
+[headers]
+anthropic-beta = "oauth-2025-04-20"
+[[quotas]]
+label = "Session"
+percent = "/five_hour/utilization"
+reset_at = "/five_hour/resets_at"
+[[quotas]]
+label = "Weekly"
+percent = "/seven_day/utilization"
+reset_at = "/seven_day/resets_at"
+[[quotas]]
+label = "Weekly Sonnet"
+percent = "/seven_day_sonnet/utilization"
+reset_at = "/seven_day_sonnet/resets_at"
