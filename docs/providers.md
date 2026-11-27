@@ -180,3 +180,21 @@ OpenRouter mapping reference: https://openrouter.ai/docs/guides/overview/models
 Organization spend adapters use the separate [cost-report mapping](cost-adapters.md).
 See the [OpenAI](openai.md), [Anthropic](anthropic.md), and [Google](google.md)
 guides for API/subscription credential boundaries and unsupported meters.
+
+## Cross-provider model pricing
+
+`providers/catalogs/models-dev.toml` configures the public comparison catalog,
+separately from account adapters. The same relative path under the user config
+directory can override it for local fixtures or a compatible catalog. It declares
+the HTTPS endpoint, attribution URL, JSON pointers for provider/model dictionaries,
+canonical model IDs and per-million USD costs. `direct_providers` maps additional
+first-party platforms to their model vendors; `vendor_aliases` controls CLI aliases.
+
+The reader preserves context tiers, provider IDs, status and unknown rates, and
+uses canonical IDs rather than fuzzy matching to join offers. Identity-less offers
+on multi-vendor hosts are not attributed to that host's owner. This configuration
+is independent of account fingerprints and never supplies authentication.
+Requests refuse redirects and are capped at 32 MiB with a 30-second timeout.
+
+Sources/schema: https://github.com/anomalyco/models.dev#api and
+https://github.com/anomalyco/models.dev/blob/dev/packages/core/src/schema.ts

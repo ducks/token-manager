@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add the `tm` executable and `--vendor` pricing browser, with direct vendor offers
+  first and third-party prices grouped under canonical model IDs.
+- Compare Models.dev catalog prices across providers, preserving context tiers,
+  unavailable rates and distinct preview/model identities. Retain the live
+  OpenRouter-only catalog through `--source openrouter`.
+- Include both executable names in local release archives.
+
 ## 20261127.0.0
 
 - Add `prices <model-or-family>` using the public OpenRouter catalog, separate

@@ -50,6 +50,7 @@ if args[0]=='build':
  p=pathlib.Path('target/release/token-manager');p.parent.mkdir(parents=True,exist_ok=True)
  version=tomllib.loads(pathlib.Path('Cargo.toml').read_text())['package']['version']
  p.write_text('#!/bin/sh\\necho token-manager '+version+'\\n');p.chmod(0o755)
+ alias=p.with_name('tm');alias.write_bytes(p.read_bytes());alias.chmod(0o755)
 if args[0]=='publish' and '--dry-run' in args and os.environ.get('FAIL_DRY_RUN'): sys.exit(23)
 if args[0]=='publish' and '--dry-run' not in args and os.environ.get('FAIL_PUBLISH'): sys.exit(24)
 ''')
@@ -112,4 +113,9 @@ if args[0]=='publish' and '--dry-run' not in args and os.environ.get('FAIL_PUBLI
         result = self.run_make("release-archive")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.publishes(), [])
-        self.assertTrue((self.root / "dist/token-manager-0.1.0-linux-x86_64.tar.gz").exists())
+        archive = self.root / "dist/token-manager-0.1.0-linux-x86_64.tar.gz"
+        self.assertTrue(archive.exists())
+        import tarfile
+        with tarfile.open(archive) as package:
+            self.assertEqual(set(package.getnames()), {"token-manager", "tm", "README.md", "LICENSE"})
+            self.assertEqual(package.getmember("tm").mode, 0o755)

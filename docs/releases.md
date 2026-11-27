@@ -59,7 +59,7 @@ make release-archive
 make release-archive RELEASE_FLAGS=--allow-dirty
 ```
 
-This never invokes Cargo publish. It creates a native Linux x86_64 archive with
+This never invokes Cargo publish. It creates a native Linux x86_64 archive with both `token-manager` and `tm`, plus
 README/LICENSE and a SHA-256 file in dist/. Binary version and archive contents
 are checked. Identical existing bytes are a no-op; conflicting files and symlinks
 are retained and rejected for manual inspection. No credentials or user config

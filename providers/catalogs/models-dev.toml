@@ -1,0 +1,17 @@
+# Public provider catalog. No account credentials or inference requests.
+url = "https://models.dev/catalog.json"
+source = "https://models.dev"
+providers = "/providers"
+models = "/models"
+provider_models = "/models"
+canonical_id = "/canonical_model_id"
+cost = "/cost"
+
+# Additional first-party serving platforms. Same-name lab/provider pairs are direct.
+[direct_providers]
+google-vertex = "google"
+
+[vendor_aliases]
+gemini = "google"
+claude = "anthropic"
+gpt = "openai"
