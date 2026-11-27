@@ -164,7 +164,10 @@ fn additive_quota_support_preserves_existing_provider_fingerprints() {
         "openrouter",
         "deepseek",
     ] {
-        let serialized = serde_json::to_value(&entries[name]).unwrap();
+        let mut legacy = entries[name].clone();
+        legacy.pricing = None;
+        assert_eq!(legacy.fingerprint(), entries[name].fingerprint());
+        let serialized = serde_json::to_value(&legacy).unwrap();
         // Check the bytes' actual field shape, not a tautological roundtrip.
         assert!(serialized.get("response_checks").is_none());
         assert_eq!(serialized.as_object().unwrap().len(), 13);

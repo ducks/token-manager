@@ -12,3 +12,13 @@ rows = "/data"
 currency = "USD"
 total = "/total_credits"
 used = "/total_usage"
+
+# Public catalog, USD per token. No account credentials are sent.
+[pricing]
+path = "/api/v1/models"
+source = "https://openrouter.ai/docs/guides/overview/models"
+rows = "/data"
+id = "/id"
+name = "/name"
+input = "/pricing/prompt"
+output = "/pricing/completion"

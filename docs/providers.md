@@ -164,3 +164,14 @@ validation rather than guessed mappings; they are not included in this catalog.
 
 These three adapters have isolated schema and HTTP fixtures. Public documentation
 was checked on November 22, 2026; no real NanoGPT or Chutes account was queried.
+
+## Public pricing catalogs
+
+An optional `[pricing]` table maps a public GET catalog independently of account
+credentials: `path`, documentation `source`, and JSON pointers `rows`, `id`, `name`,
+`input`, and `output`. Input/output values must be USD per token. The engine applies
+the per-million conversion with decimal arithmetic. Catalog requests never send
+account authentication and refuse redirects. Pricing metadata is excluded from
+account fingerprints so a catalog update does not require reconnecting accounts.
+
+OpenRouter mapping reference: https://openrouter.ai/docs/guides/overview/models
