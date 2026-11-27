@@ -1,6 +1,6 @@
 [package]
 name = "token-manager"
-version = "20261122.0.0"
+version = "20261127.0.0"
 edition = "2024"
 rust-version = "1.88"
 description = "Read-only AI account balances and quotas in your terminal"
