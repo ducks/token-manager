@@ -1,0 +1,29 @@
+id = "anthropic"
+name = "Anthropic API"
+base_url = "https://api.anthropic.com"
+path = "/v1/organizations/analytics/cost"
+key_url = "https://platform.claude.com/settings/admin-keys"
+billing_url = "https://platform.claude.com/cost"
+credential_help = "Use a Claude Console Admin API key. Reports organization spend for the last 30 completed UTC days, not remaining credits or personal Claude subscription quota. Analytics may lag up to 24 hours and excludes some separately invoiced charges."
+source = "https://platform.claude.com/docs/en/manage-claude/usage-cost-analytics-api"
+experimental = true
+
+[auth]
+header = "x-api-key"
+prefix = ""
+[headers]
+anthropic-version = "2023-06-01"
+anthropic-beta = "analytics-usage-cost-2026-08-24"
+[costs]
+start_parameter = "starting_at"
+end_parameter = "ending_at"
+time_format = "rfc3339"
+rows = "/data"
+amount = "/cost/amount"
+currency = "/cost/currency"
+divisor = 100
+has_more = "/has_more"
+next_page = "/next_page"
+page_parameter = "page"
+[costs.query]
+limit = "1000"
