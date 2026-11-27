@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Add `prices <model-or-family>` using the public OpenRouter catalog, separate
+  input/output USD-per-million rates, price sorting, exact-model matching and JSON.
+- Add OpenAI and Anthropic organization cost reports with bounded pagination,
+  exact decimal conversion and explicit 30-day UTC reporting windows.
+- Add experimental ChatGPT/Codex and Claude subscription quota adapters using
+  explicitly supplied OAuth access tokens, separate from API billing credentials.
+- Add separate Gemini API and Google AI subscription dashboard bookmarks, with
+  explicit unsupported live-data states rather than guessed balances or quotas.
+- Preserve existing account bindings when adding public pricing metadata and
+  document the new adapters, credential requirements and reporting limitations.
+
 ## 20261122.0.0
 
 - Add date-versioned releases with verified crates.io packaging, release commits,

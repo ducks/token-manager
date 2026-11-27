@@ -99,6 +99,12 @@ OpenRouter). Adding another source requires a TOML mapping with USD-per-token ra
 | `nanogpt` | USD wallet balance | Read-only POST; official schema; fixtures verified |
 | `nanogpt-subscription` | Daily/weekly input-token and daily image allowances | Separate subscription counters; fixtures verified |
 | `chutes` | Account credit balance | Upstream account-read mapping; fixtures verified |
+| `openai` | Organization spend over 30 completed UTC days | Admin key; fixtures verified |
+| `chatgpt` | Primary/secondary subscription quota windows | Explicit OAuth token; experimental; fixtures verified |
+| `anthropic` | Organization spend over 30 completed UTC days | Admin key; beta analytics API; fixtures verified |
+| `claude` | Session, weekly, and weekly Sonnet quotas | Explicit OAuth token; experimental; fixtures verified |
+| `gemini` | Gemini API billing bookmark | Live balance/spend unsupported |
+| `gemini-subscription` | Google AI / Gemini subscription bookmark | Live quota unsupported |
 
 Go windows do not describe the Zen wallet. Missing data says “not available”;
 unsupported or failed checks never become a fabricated zero balance.
@@ -126,7 +132,8 @@ Custom definitions live under `~/.config/token-manager/providers/*.toml`.
 Account config is `accounts.json` and successful snapshots are under `cache/`.
 `TOKEN_MANAGER_CONFIG_DIR` or `--config-dir` selects an isolated configuration;
 `XDG_CONFIG_HOME` is supported. Definitions are trusted endpoint configuration.
-A changed definition requires explicit reconnect before credentials are sent.
+A changed account definition requires explicit reconnect before credentials are sent;
+public pricing metadata is excluded from that binding.
 Concurrent account edits use a lock; a crash can leave `accounts.lock` for manual
 inspection after confirming no edit is still running. Status reads are unlocked.
 
@@ -136,7 +143,7 @@ need attention or are unsupported. Partial status still prints all rows/JSON.
 
 ## Development and verification
 
-`Cargo.toml` owns version 0.1.0; `Cargo.lock` locks dependencies. `shell.nix` pins
+`Cargo.toml` owns the release version; `Cargo.lock` locks dependencies. `shell.nix` pins
 nixpkgs and declares Rust/Cargo, format/lint tools, Python, Make and libsecret.
 `make check` runs formatting, Clippy with warnings denied and behavioral tests.
 Tests use disposable state, synthetic credentials and local HTTP servers; they
@@ -159,10 +166,10 @@ No OAuth/device login or refresh, TUI/watch mode, account removal, credit-expiry
 lots, automatic purchase, provider scraping or quota forecasting. Custom mappings
 cover one GET or empty read-only account POST, JSON pointers, scalar response
 checks, percent/used-limit quotas, explicit epoch reset formats and degraded-counter
-guards; pagination, signing, multi-step requests and
-nonstandard authentication require a later explicit capability. Built-in endpoint
+guards. Organization cost adapters additionally support bounded pagination and
+public API-version headers; see [cost mappings](docs/cost-adapters.md). Signing,
+other multi-step requests and nonstandard authentication need further capabilities. Built-in endpoint
 support is not a guarantee every key/plan has the required permission.
 
-See [the openai account guide](docs/openai.md) for the new API and subscription adapters.
-See [the anthropic account guide](docs/anthropic.md) for the new API and subscription adapters.
-See [the google account guide](docs/google.md) for the new API and subscription adapters.
+See the [OpenAI](docs/openai.md), [Anthropic](docs/anthropic.md), and
+[Google](docs/google.md) account guides for setup and provider-specific limitations.

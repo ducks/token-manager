@@ -3,7 +3,8 @@
 Create a TOML file under the configuration's `providers/` directory. Definitions
 are full replacements, not partial merges. Duplicate custom IDs fail. A custom
 ID may override a built-in; reconnect is required when its fingerprint changes.
-Account credential bindings and cache fingerprints include the full definition.
+Account credential bindings and cache fingerprints include the account definition,
+excluding public pricing metadata.
 Built-ins are automatically embedded from the sorted repository `providers/*.toml`
 directory by `build.rs`; new services need no Rust registry edit. Custom user
 configuration files remain dynamically loaded.
@@ -175,3 +176,7 @@ account authentication and refuse redirects. Pricing metadata is excluded from
 account fingerprints so a catalog update does not require reconnecting accounts.
 
 OpenRouter mapping reference: https://openrouter.ai/docs/guides/overview/models
+
+Organization spend adapters use the separate [cost-report mapping](cost-adapters.md).
+See the [OpenAI](openai.md), [Anthropic](anthropic.md), and [Google](google.md)
+guides for API/subscription credential boundaries and unsupported meters.
