@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 20261127.0.0
+
 - Add `prices <model-or-family>` using the public OpenRouter catalog, separate
   input/output USD-per-million rates, price sorting, exact-model matching and JSON.
 - Add OpenAI and Anthropic organization cost reports with bounded pagination,
