@@ -1,0 +1,23 @@
+id = "openai"
+name = "OpenAI API"
+base_url = "https://api.openai.com"
+path = "/v1/organization/costs"
+key_url = "https://platform.openai.com/settings/organization/admin-keys"
+billing_url = "https://platform.openai.com/settings/organization/billing/overview"
+credential_help = "Use an organization Admin API key with cost-report access, not a project inference key. Reports the last 30 completed UTC days of organization spend, not credit balance or ChatGPT subscription quota."
+source = "https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/usage/methods/costs"
+
+[costs]
+start_parameter = "start_time"
+end_parameter = "end_time"
+time_format = "unix_seconds"
+rows = "/data"
+nested_rows = "/results"
+amount = "/amount/value"
+currency = "/amount/currency"
+divisor = 1
+has_more = "/has_more"
+next_page = "/next_page"
+page_parameter = "page"
+[costs.query]
+limit = "31"

@@ -1,3 +1,4 @@
+pub mod costs;
 pub mod credentials;
 pub mod prices;
 pub mod provider;
