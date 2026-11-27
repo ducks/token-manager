@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 20261127.0.1
+
 - Add the `tm` executable and `--vendor` pricing browser, with direct vendor offers
   first and third-party prices grouped under canonical model IDs.
 - Compare Models.dev catalog prices across providers, preserving context tiers,
