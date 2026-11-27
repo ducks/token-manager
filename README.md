@@ -62,26 +62,49 @@ import of OpenCode/Claux auth stores or borrowing a Go key for Zen.
 
 ## Model prices
 
+Both `tm` and `token-manager` run the same CLI:
+
 ```sh
-token-manager prices claude                    # Compare a family, highest output rate first
-token-manager prices gemini --sort input       # Highest input rate first
-token-manager prices anthropic/claude-sonnet-4  # Exact catalog model ID
-token-manager prices gpt --json
+tm --vendor google                            # All listed Google models and their offers
+tm prices gemini                              # Search a model family across providers
+tm prices google/gemini-2.5-pro                # Exact model, all linked provider offers
+tm --vendor google --provider openrouter      # Only OpenRouter offers for Google models
+tm prices claude --sort input --json
+tm prices gemini --source openrouter           # Previous live OpenRouter-only catalog
 ```
 
-Fetches the public OpenRouter text-model catalog without an account or credentials.
-Input and output prices are shown separately in USD per million tokens. These are
-OpenRouter catalog rates, not a promise of direct-provider pricing or your final
-bill; caching, context tiers, routing, and non-token charges may differ. The command
-fetches fresh data on each run and does not write account configuration or caches.
+**Vendor** means the company behind the model; **provider** means the service
+selling access to it. Results group offers under each model: the vendor's primary
+API comes first, then other first-party platforms (such as Google Vertex), then
+third parties. Each section sorts by highest input or output price; model groups
+sort by their first available offer's rate. Input/output and cache-read rates are
+shown separately in USD per million text tokens, with context pricing tiers on
+separate rows. JSON also includes cache-write rates, provider model IDs and links.
 
-Matching ignores case, spaces, and punctuation. Exact IDs, short model slugs, and
-display names take precedence; otherwise the query matches part of an ID or name.
-Unknown, malformed, negative/dynamic, and missing rates stay unavailable and sort
-last; an explicit zero remains free. No matches or fetch failures return an error.
-JSON includes the source, observation time, currency, sort field, and both rates.
-`--provider` selects a provider with a public `[pricing]` mapping (currently only
-OpenRouter). Adding another source requires a TOML mapping with USD-per-token rates.
+The default source is the public [Models.dev catalog](https://models.dev), which
+contains direct API prices and third-party offers. These are community-maintained
+catalog rates, **not live vendor quotes**. They may lag vendor changes; the fetch
+time is not a price-verification date. The command shows all catalog-listed offers
+it can link, not every possible reseller. Provider subscriptions, batch discounts,
+mode-specific pricing and non-token charges can change the actual bill. Non-text
+or unspecified-output models remain listed, but their token rates are unavailable
+rather than being assigned a potentially incorrect unit. Deprecated offers are
+marked. The catalog can also lack a direct-vendor offer; that is shown explicitly.
+
+Canonical catalog model IDs join offers. Preview, dated and other distinct IDs
+stay separate; unlinked offers are never guessed from similar names. Unlinked
+first-party models retain their vendor; other unlinked offers are available with
+`--provider` but cannot match `--vendor`. `gemini`, `claude` and `gpt` are accepted
+vendor aliases for `google`, `anthropic` and `openai`. Search ignores case, spaces
+and punctuation; exact IDs or names take precedence over family/substring matching.
+
+No account or credentials are needed. Each invocation fetches fresh catalog data
+without writing account state or caches. Missing, malformed and negative rates
+remain unavailable; an explicit zero is retained, not a guarantee of free access.
+No matches or fetch failures return an error. The JSON schema for the default
+source groups `offers` within `models`; `--source openrouter` retains the old flat
+response and requires a model/family query. `--provider` now filters serving
+providers; select the live OpenRouter catalog with `--source openrouter` instead.
 
 ## Providers
 

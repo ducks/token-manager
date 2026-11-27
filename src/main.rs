@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail, ensure};
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, CommandFactory, Parser, Subcommand};
 use sha2::{Digest, Sha256};
 use std::{
     fs,
@@ -8,7 +8,7 @@ use std::{
     process::Command,
 };
 use token_manager::{
-    credentials, prices,
+    catalog, credentials, prices,
     provider::{self, providers},
     state::{self, Account, Credential},
     status,
@@ -28,8 +28,21 @@ struct Cli {
         help = "Permit HTTP only to literal loopback addresses for local fixtures"
     )]
     allow_local_http: bool,
+    /// Filter models by their creator, e.g. google or anthropic.
+    #[arg(long, global = true)]
+    vendor: Option<String>,
+    /// Filter offers by the serving provider, e.g. openrouter.
+    #[arg(long, global = true)]
+    provider: Option<String>,
+    /// Pricing catalog; models-dev compares providers, openrouter reads its live catalog.
+    #[arg(long, global = true, value_parser = ["models-dev", "openrouter"])]
+    source: Option<String>,
+    #[arg(long, global = true, value_enum)]
+    sort: Option<prices::Sort>,
+    #[arg(long, global = true)]
+    json: bool,
     #[command(subcommand)]
-    command: Action,
+    command: Option<Action>,
 }
 #[derive(Args)]
 struct LoginOptions {
@@ -46,20 +59,12 @@ struct LoginOptions {
 enum Action {
     /// Look up a model or compare a family using public catalog prices.
     Prices {
-        query: String,
-        #[arg(long, default_value = "openrouter")]
-        provider: String,
-        #[arg(long, value_enum, default_value = "output")]
-        sort: prices::Sort,
-        #[arg(long)]
-        json: bool,
+        query: Option<String>,
     },
-    Providers {
-        #[arg(long)]
-        json: bool,
-    },
+    Providers,
     Add {
-        provider: String,
+        #[arg(value_name = "PROVIDER")]
+        account_provider: String,
         #[arg(long)]
         name: Option<String>,
         #[command(flatten)]
@@ -72,8 +77,6 @@ enum Action {
     },
     Status {
         account: Option<String>,
-        #[arg(long)]
-        json: bool,
         #[arg(long, conflicts_with = "cached")]
         refresh: bool,
         #[arg(long)]
@@ -167,27 +170,71 @@ fn run() -> Result<()> {
     } else {
         std::env::current_dir()?.join(root)
     };
-    let definitions = providers(&root.join("providers"), cli.allow_local_http)?;
-    let config_path = root.join("accounts.json");
-    match cli.command {
-        Action::Prices {
-            query,
-            provider,
-            sort,
-            json,
-        } => {
+    let pricing_command = matches!(cli.command, Some(Action::Prices { .. }) | None);
+    if pricing_command {
+        let query = match &cli.command {
+            Some(Action::Prices { query }) => query.as_deref(),
+            _ => None,
+        };
+        if query.is_none() && cli.vendor.is_none() && cli.provider.is_none() {
+            Cli::command().print_help()?;
+            bail!("Specify a model/family, --vendor, or --provider");
+        }
+        let sort = cli.sort.unwrap_or(prices::Sort::Output);
+        if cli.source.as_deref() == Some("openrouter") {
+            ensure!(
+                cli.vendor.is_none(),
+                "Use the default models-dev source for --vendor comparisons"
+            );
+            ensure!(
+                cli.provider.as_deref().is_none_or(|p| p == "openrouter"),
+                "The openrouter source only serves --provider openrouter"
+            );
+            let query =
+                query.context("The live openrouter source requires a model/family query")?;
+            let definitions = providers(&root.join("providers"), cli.allow_local_http)?;
             let definition = definitions
-                .get(&provider)
-                .context("Unknown pricing provider")?;
-            let report = prices::fetch(definition, &query, sort, cli.allow_local_http)?;
-            if json {
+                .get("openrouter")
+                .context("OpenRouter pricing definition unavailable")?;
+            let report = prices::fetch(definition, query, sort, cli.allow_local_http)?;
+            if cli.json {
                 println!("{}", serde_json::to_string_pretty(&report)?);
             } else {
                 print!("{}", prices::table(&report));
             }
+        } else {
+            let map = catalog::CatalogMap::load(&root)?;
+            let report = catalog::fetch(
+                &map,
+                &catalog::Filter {
+                    query,
+                    vendor: cli.vendor.as_deref(),
+                    provider: cli.provider.as_deref(),
+                },
+                sort,
+                cli.allow_local_http,
+            )?;
+            if cli.json {
+                println!("{}", serde_json::to_string_pretty(&report)?);
+            } else {
+                print!("{}", catalog::table(&report));
+            }
         }
-        Action::Providers { json } => {
-            if json {
+        return Ok(());
+    }
+    ensure!(
+        cli.vendor.is_none()
+            && cli.provider.is_none()
+            && cli.source.is_none()
+            && cli.sort.is_none(),
+        "Pricing filters only apply to prices or the pricing shortcut"
+    );
+    let definitions = providers(&root.join("providers"), cli.allow_local_http)?;
+    let config_path = root.join("accounts.json");
+    match cli.command.context("Command required")? {
+        Action::Prices { .. } => unreachable!("handled above"),
+        Action::Providers => {
+            if cli.json {
                 println!(
                     "{}",
                     serde_json::to_string_pretty(&definitions.values().collect::<Vec<_>>())?
@@ -209,7 +256,7 @@ fn run() -> Result<()> {
             }
         }
         Action::Add {
-            provider,
+            account_provider: provider,
             name,
             login,
         } => {
@@ -291,7 +338,6 @@ fn run() -> Result<()> {
         }
         Action::Status {
             account,
-            json,
             refresh,
             cached,
         } => {
@@ -312,7 +358,7 @@ fn run() -> Result<()> {
                 refresh,
                 cli.allow_local_http,
             )?;
-            if json {
+            if cli.json {
                 println!("{}", serde_json::to_string_pretty(&rows)?);
             } else {
                 print!("{}", status::table(&rows));

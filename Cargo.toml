@@ -3,10 +3,19 @@ name = "token-manager"
 version = "20261127.0.0"
 edition = "2024"
 rust-version = "1.88"
+default-run = "token-manager"
 description = "Read-only AI account balances and quotas in your terminal"
 license = "MIT"
 repository = "https://github.com/ducks/token-manager"
 readme = "README.md"
+
+[[bin]]
+name = "token-manager"
+path = "src/main.rs"
+
+[[bin]]
+name = "tm"
+path = "src/bin/tm.rs"
 
 [dependencies]
 anyhow = "1"

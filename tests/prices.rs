@@ -86,7 +86,14 @@ fn public_catalog_cli_needs_no_accounts_and_sends_no_auth() {
     let output = Command::new(env!("CARGO_BIN_EXE_token-manager"))
         .arg("--config-dir")
         .arg(root)
-        .args(["--allow-local-http", "prices", "claude", "--json"])
+        .args([
+            "--allow-local-http",
+            "prices",
+            "claude",
+            "--source",
+            "openrouter",
+            "--json",
+        ])
         .output()
         .unwrap();
     assert!(

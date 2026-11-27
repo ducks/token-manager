@@ -34,6 +34,9 @@ def check(allow_dirty):
     require(binary.is_file() and not binary.is_symlink(), "Release binary missing")
     result = subprocess.check_output([str(binary), "--version"], text=True).strip()
     require(result == f"token-manager {version}", "Binary version mismatch")
+    alias = ROOT / "target/release/tm"
+    require(alias.is_file() and not alias.is_symlink(), "tm binary missing")
+    require(subprocess.check_output([str(alias), "--version"], text=True).strip() == result, "tm binary version mismatch")
     state = subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True)
     require(not state or allow_dirty, "Working tree is dirty; --allow-dirty permits only a local preview")
     tag = subprocess.run(["git", "show-ref", "--verify", "--quiet", f"refs/tags/v{version}"], cwd=ROOT)
@@ -51,14 +54,14 @@ def prepare(allow_dirty):
     require(not target.is_symlink(), "Refusing symlink output directory")
     target.mkdir(exist_ok=True)
     archive = target / f"token-manager-{version}-linux-x86_64.tar.gz"
-    files = {"token-manager": binary.read_bytes(), "README.md": (ROOT / "README.md").read_bytes(), "LICENSE": (ROOT / "LICENSE").read_bytes()}
+    files = {"token-manager": binary.read_bytes(), "tm": (ROOT / "target/release/tm").read_bytes(), "README.md": (ROOT / "README.md").read_bytes(), "LICENSE": (ROOT / "LICENSE").read_bytes()}
     memory = io.BytesIO()
     with gzip.GzipFile(fileobj=memory, mode="wb", mtime=0, filename="") as zipped:
         with tarfile.open(fileobj=zipped, mode="w") as tar:
             for name, data in sorted(files.items()):
                 entry = tarfile.TarInfo(name)
                 entry.size = len(data)
-                entry.mode = 0o755 if name == "token-manager" else 0o644
+                entry.mode = 0o755 if name in {"token-manager", "tm"} else 0o644
                 tar.addfile(entry, io.BytesIO(data))
     data = memory.getvalue()
     digest = hashlib.sha256(data).hexdigest()
