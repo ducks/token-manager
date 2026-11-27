@@ -139,3 +139,5 @@ checks, percent/used-limit quotas, explicit epoch reset formats and degraded-cou
 guards; pagination, signing, multi-step requests and
 nonstandard authentication require a later explicit capability. Built-in endpoint
 support is not a guarantee every key/plan has the required permission.
+
+See [the openai account guide](docs/openai.md) for the new API and subscription adapters.

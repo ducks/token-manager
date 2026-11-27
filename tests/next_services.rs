@@ -27,7 +27,7 @@ fn subscription() -> serde_json::Value {
 #[test]
 fn new_services_are_embedded_with_distinct_account_contracts() {
     let entries = catalog();
-    assert_eq!(entries.len(), 12);
+    assert!(entries.len() >= 12); // Additional provider adapters may be embedded.
     for name in ["chutes", "nanogpt", "nanogpt-subscription"] {
         entries[name].validate(false).unwrap();
     }

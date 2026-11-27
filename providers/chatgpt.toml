@@ -1,0 +1,21 @@
+id = "chatgpt"
+name = "ChatGPT / Codex subscription"
+base_url = "https://chatgpt.com"
+path = "/backend-api/wham/usage"
+key_url = "https://chatgpt.com"
+billing_url = "https://chatgpt.com/codex/settings/usage"
+credential_help = "Provide an explicitly selected Codex/ChatGPT OAuth access token, not an OpenAI API key. No automatic credential import, OAuth login or refresh. Reports only the primary/secondary quota windows returned by this endpoint, not every ChatGPT feature or an API credit balance."
+source = "https://github.com/openai/codex/blob/main/codex-rs/backend-client/src/client/rate_limit_resets.rs"
+experimental = true
+
+[[quotas]]
+label = "Primary window"
+percent = "/rate_limit/primary_window/used_percent"
+reset_at = "/rate_limit/primary_window/reset_at"
+reset_format = "unix_seconds"
+
+[[quotas]]
+label = "Secondary window"
+percent = "/rate_limit/secondary_window/used_percent"
+reset_at = "/rate_limit/secondary_window/reset_at"
+reset_format = "unix_seconds"

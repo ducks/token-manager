@@ -27,6 +27,10 @@ pub struct Provider {
     pub source: String,
     #[serde(default)]
     pub experimental: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub costs: Option<crate::costs::CostMap>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub headers: BTreeMap<String, String>,
     pub balance: Option<BalanceMap>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub response_checks: Vec<ResponseCheck>,
@@ -133,6 +137,8 @@ pub struct Quota {
 }
 #[derive(Clone, Default, Deserialize, Serialize, Debug, PartialEq)]
 pub struct AccountData {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub costs: Vec<crate::costs::Cost>,
     pub balances: Vec<Balance>,
     pub quotas: Vec<Quota>,
 }
@@ -191,6 +197,25 @@ impl Provider {
     }
     pub fn validate(&self, allow_local_http: bool) -> Result<()> {
         ensure!(identifier(&self.id), "invalid provider ID");
+        for (name, value) in &self.headers {
+            ensure!(
+                (name.ends_with("-version") || name.ends_with("-beta"))
+                    && reqwest::header::HeaderName::from_bytes(name.as_bytes()).is_ok()
+                    && !name.eq_ignore_ascii_case(&self.auth.header),
+                "only public API version headers are supported"
+            );
+            ensure!(
+                value.len() <= 128 && reqwest::header::HeaderValue::from_str(value).is_ok(),
+                "invalid API version header"
+            );
+        }
+        if let Some(map) = &self.costs {
+            map.validate()?;
+            ensure!(
+                self.method.is_get() && self.balance.is_none() && self.quotas.is_empty(),
+                "cost mappings require a separate GET account adapter"
+            );
+        }
         ensure!(
             reqwest::header::HeaderName::from_bytes(self.auth.header.as_bytes()).is_ok(),
             "invalid authentication header name"
@@ -215,6 +240,7 @@ impl Provider {
         } else {
             ensure!(
                 self.path.is_empty()
+                    && self.costs.is_none()
                     && self.balance.is_none()
                     && self.quotas.is_empty()
                     && self.method.is_get(),
@@ -229,7 +255,10 @@ impl Provider {
             );
         }
         ensure!(
-            self.unsupported_reason.is_some() || self.balance.is_some() || !self.quotas.is_empty(),
+            self.unsupported_reason.is_some()
+                || self.costs.is_some()
+                || self.balance.is_some()
+                || !self.quotas.is_empty(),
             "provider has no account-data mapping"
         );
         ensure!(self.response_checks.len() <= 8, "too many response checks");

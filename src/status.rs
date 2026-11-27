@@ -37,11 +37,17 @@ fn fetch(
     secret: String,
     allow_local_http: bool,
 ) -> Result<AccountData, (&'static str, &'static str)> {
+    if provider.costs.is_some() {
+        return crate::costs::fetch(client, provider, &secret, allow_local_http);
+    }
     let url = provider
         .endpoint(allow_local_http)
         .map_err(|_| ("configuration_error", "Invalid provider URL"))?;
-    let response = client
-        .request(provider.method.into(), url)
+    let mut request = client.request(provider.method.into(), url);
+    for (name, value) in &provider.headers {
+        request = request.header(name, value);
+    }
+    let response = request
         .header(
             &provider.auth.header,
             format!("{}{}", provider.auth.prefix, secret),
@@ -218,6 +224,15 @@ pub fn table(rows: &[Row]) -> String {
     for row in rows {
         let mut values = Vec::new();
         if let Some(data) = &row.data {
+            for cost in &data.costs {
+                values.push(format!(
+                    "{} {} reported spend; {} to {} UTC (exclusive)",
+                    cost.currency,
+                    cost.amount.as_deref().unwrap_or("not available"),
+                    cost.starting_at,
+                    cost.ending_at
+                ));
+            }
             for balance in &data.balances {
                 values.push(format!(
                     "{} {} remaining{}",
