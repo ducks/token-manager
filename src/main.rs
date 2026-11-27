@@ -8,7 +8,7 @@ use std::{
     process::Command,
 };
 use token_manager::{
-    credentials,
+    credentials, prices,
     provider::{self, providers},
     state::{self, Account, Credential},
     status,
@@ -44,6 +44,16 @@ struct LoginOptions {
 }
 #[derive(Subcommand)]
 enum Action {
+    /// Look up a model or compare a family using public catalog prices.
+    Prices {
+        query: String,
+        #[arg(long, default_value = "openrouter")]
+        provider: String,
+        #[arg(long, value_enum, default_value = "output")]
+        sort: prices::Sort,
+        #[arg(long)]
+        json: bool,
+    },
     Providers {
         #[arg(long)]
         json: bool,
@@ -160,6 +170,22 @@ fn run() -> Result<()> {
     let definitions = providers(&root.join("providers"), cli.allow_local_http)?;
     let config_path = root.join("accounts.json");
     match cli.command {
+        Action::Prices {
+            query,
+            provider,
+            sort,
+            json,
+        } => {
+            let definition = definitions
+                .get(&provider)
+                .context("Unknown pricing provider")?;
+            let report = prices::fetch(definition, &query, sort, cli.allow_local_http)?;
+            if json {
+                println!("{}", serde_json::to_string_pretty(&report)?);
+            } else {
+                print!("{}", prices::table(&report));
+            }
+        }
         Action::Providers { json } => {
             if json {
                 println!(

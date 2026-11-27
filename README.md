@@ -60,6 +60,29 @@ No silent fallback stores keys as plaintext. Account configuration and cached
 balances are private files; credentials remain separate. There is no automatic
 import of OpenCode/Claux auth stores or borrowing a Go key for Zen.
 
+## Model prices
+
+```sh
+token-manager prices claude                    # Compare a family, highest output rate first
+token-manager prices gemini --sort input       # Highest input rate first
+token-manager prices anthropic/claude-sonnet-4  # Exact catalog model ID
+token-manager prices gpt --json
+```
+
+Fetches the public OpenRouter text-model catalog without an account or credentials.
+Input and output prices are shown separately in USD per million tokens. These are
+OpenRouter catalog rates, not a promise of direct-provider pricing or your final
+bill; caching, context tiers, routing, and non-token charges may differ. The command
+fetches fresh data on each run and does not write account configuration or caches.
+
+Matching ignores case, spaces, and punctuation. Exact IDs, short model slugs, and
+display names take precedence; otherwise the query matches part of an ID or name.
+Unknown, malformed, negative/dynamic, and missing rates stay unavailable and sort
+last; an explicit zero remains free. No matches or fetch failures return an error.
+JSON includes the source, observation time, currency, sort field, and both rates.
+`--provider` selects a provider with a public `[pricing]` mapping (currently only
+OpenRouter). Adding another source requires a TOML mapping with USD-per-token rates.
+
 ## Providers
 
 | ID | Account data | Status |

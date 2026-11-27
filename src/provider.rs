@@ -27,6 +27,8 @@ pub struct Provider {
     pub source: String,
     #[serde(default)]
     pub experimental: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pricing: Option<crate::prices::PricingMap>,
     pub balance: Option<BalanceMap>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub response_checks: Vec<ResponseCheck>,
@@ -159,9 +161,12 @@ fn money(value: &Value, path: &str) -> Result<Decimal> {
 }
 impl Provider {
     pub fn fingerprint(&self) -> String {
+        // Public catalog changes do not invalidate account credentials or caches.
+        let mut account_definition = self.clone();
+        account_definition.pricing = None;
         format!(
             "{:x}",
-            Sha256::digest(serde_json::to_vec(self).expect("serializable provider"))
+            Sha256::digest(serde_json::to_vec(&account_definition).expect("serializable provider"))
         )
     }
     pub fn endpoint(&self, allow_local_http: bool) -> Result<Url> {
@@ -191,6 +196,9 @@ impl Provider {
     }
     pub fn validate(&self, allow_local_http: bool) -> Result<()> {
         ensure!(identifier(&self.id), "invalid provider ID");
+        if let Some(map) = &self.pricing {
+            map.validate(self, allow_local_http)?;
+        }
         ensure!(
             reqwest::header::HeaderName::from_bytes(self.auth.header.as_bytes()).is_ok(),
             "invalid authentication header name"
