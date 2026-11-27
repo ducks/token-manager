@@ -1,0 +1,8 @@
+id = "gemini-subscription"
+name = "Google AI / Gemini subscription"
+base_url = "https://gemini.google.com"
+key_url = "https://gemini.google.com"
+billing_url = "https://one.google.com"
+credential_help = "Google AI subscriptions and Gemini API billing have separate usage meters. View Gemini app usage in Settings and manage your subscription in Google One. No key is needed for this bookmark."
+source = "https://support.google.com/gemini/answer/16275805"
+unsupported_reason = "No verified programmatic consumer Gemini subscription-quota endpoint is implemented. Check Gemini Settings for usage and Google One for billing; an API key does not reveal subscription quota."

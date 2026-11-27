@@ -165,3 +165,4 @@ support is not a guarantee every key/plan has the required permission.
 
 See [the openai account guide](docs/openai.md) for the new API and subscription adapters.
 See [the anthropic account guide](docs/anthropic.md) for the new API and subscription adapters.
+See [the google account guide](docs/google.md) for the new API and subscription adapters.

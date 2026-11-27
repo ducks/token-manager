@@ -1,0 +1,8 @@
+id = "gemini"
+name = "Google Gemini API"
+base_url = "https://generativelanguage.googleapis.com"
+key_url = "https://aistudio.google.com/api-keys"
+billing_url = "https://aistudio.google.com/billing"
+credential_help = "Gemini API billing is separate from the Gemini app subscription. View project usage and prepaid credit in Google AI Studio. No key is needed for this bookmark."
+source = "https://aistudio.google.com/docs/billing"
+unsupported_reason = "No verified Gemini API-key endpoint for account balance or aggregate spend is implemented. Open billing in AI Studio; unavailable data is not zero."
