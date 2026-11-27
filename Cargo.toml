@@ -1,6 +1,6 @@
 [package]
 name = "token-manager"
-version = "20261127.0.0"
+version = "20261127.0.1"
 edition = "2024"
 rust-version = "1.88"
 default-run = "token-manager"
